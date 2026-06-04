@@ -111,30 +111,32 @@ export default function ReportsPage() {
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="card">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter size={16} className="text-primary-500" />
-          <h2 className="font-semibold text-gray-700">Filtros</h2>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <div>
-            <label className="form-label">Sala</label>
-            <select value={filters.sala_id} onChange={e => setFilters(f => ({ ...f, sala_id: e.target.value }))} className="form-input">
+      {/* Filters — una sola línea con sombra */}
+      <div className="bg-white rounded-xl border border-primary-100 shadow-card px-4 py-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-1.5 text-primary-600 font-semibold text-sm flex-shrink-0">
+            <Filter size={14} />
+            <span>Filtros</span>
+          </div>
+          <div className="h-4 w-px bg-gray-200 flex-shrink-0" />
+          <div className="flex items-end gap-2 flex-1 flex-wrap">
+          <div className="min-w-[120px] flex-1">
+            <label className="form-label text-xs mb-0.5">Sala</label>
+            <select value={filters.sala_id} onChange={e => setFilters(f => ({ ...f, sala_id: e.target.value }))} className="form-input py-1.5 text-xs">
               <option value="">Todas</option>
               {salas.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
             </select>
           </div>
-          <div>
-            <label className="form-label">Servicio</label>
-            <select value={filters.servicio_id} onChange={e => setFilters(f => ({ ...f, servicio_id: e.target.value }))} className="form-input">
+          <div className="min-w-[130px] flex-1">
+            <label className="form-label text-xs mb-0.5">Servicio</label>
+            <select value={filters.servicio_id} onChange={e => setFilters(f => ({ ...f, servicio_id: e.target.value }))} className="form-input py-1.5 text-xs">
               <option value="">Todos</option>
               {servicios.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
             </select>
           </div>
-          <div>
-            <label className="form-label">Estado</label>
-            <select value={filters.estado} onChange={e => setFilters(f => ({ ...f, estado: e.target.value }))} className="form-input">
+          <div className="min-w-[100px] flex-1">
+            <label className="form-label text-xs mb-0.5">Estado</label>
+            <select value={filters.estado} onChange={e => setFilters(f => ({ ...f, estado: e.target.value }))} className="form-input py-1.5 text-xs">
               <option value="">Todos</option>
               <option value="pendiente">Pendiente</option>
               <option value="aceptada">Aceptada</option>
@@ -143,60 +145,54 @@ export default function ReportsPage() {
               <option value="reprogramada">Reprogramada</option>
             </select>
           </div>
-          <div>
-            <label className="form-label">Desde</label>
-            <input type="date" value={filters.desde} onChange={e => setFilters(f => ({ ...f, desde: e.target.value }))} className="form-input" />
+          <div className="min-w-[110px]">
+            <label className="form-label text-xs mb-0.5">Desde</label>
+            <input type="date" value={filters.desde} onChange={e => setFilters(f => ({ ...f, desde: e.target.value }))} className="form-input py-1.5 text-xs" />
           </div>
-          <div>
-            <label className="form-label">Hasta</label>
-            <input type="date" value={filters.hasta} onChange={e => setFilters(f => ({ ...f, hasta: e.target.value }))} className="form-input" />
+          <div className="min-w-[110px]">
+            <label className="form-label text-xs mb-0.5">Hasta</label>
+            <input type="date" value={filters.hasta} onChange={e => setFilters(f => ({ ...f, hasta: e.target.value }))} className="form-input py-1.5 text-xs" />
           </div>
-          <div>
-            <label className="form-label">Solicitante</label>
-            <input
-              type="text"
-              value={filters.solicitante}
+          <div className="min-w-[130px] flex-1">
+            <label className="form-label text-xs mb-0.5">Solicitante</label>
+            <input type="text" value={filters.solicitante}
               onChange={e => setFilters(f => ({ ...f, solicitante: e.target.value }))}
-              placeholder="Nombre o ID"
-              className="form-input"
-            />
+              placeholder="Nombre o ID" className="form-input py-1.5 text-xs" />
           </div>
-        </div>
-        <div className="mt-3 flex justify-end">
-          <button onClick={fetchReport} disabled={loading} className="btn-primary">
-            {loading ? 'Buscando...' : 'Aplicar filtros'}
+          </div>
+          <button onClick={fetchReport} disabled={loading} className="btn-primary text-xs px-3 py-1.5 flex-shrink-0 self-end">
+            {loading ? 'Buscando...' : 'Buscar'}
           </button>
         </div>
       </div>
 
       {/* Table */}
-      <div className="card overflow-hidden p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-primary-50 text-primary-700">
+      <div className="table-wrapper overflow-x-auto">
+          <table className="data-table">
+            <thead>
               <tr>
                 {['ID','Sala','Asunto','Solicitante','Servicio','Fecha','Horario','Estado','Invitados'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 font-semibold whitespace-nowrap">{h}</th>
+                  <th key={h}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {rows.map(r => (
-                <tr key={r.id} className="border-t border-gray-50 hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 text-gray-500">#{r.id}</td>
-                  <td className="px-4 py-3 font-medium text-gray-700">{r.sala?.nombre}</td>
-                  <td className="px-4 py-3 text-gray-600 max-w-xs truncate">{r.asunto}</td>
-                  <td className="px-4 py-3">
+                <tr key={r.id}>
+                  <td className="text-gray-500 text-xs">#{r.id}</td>
+                  <td className="font-medium text-gray-700">{r.sala?.nombre}</td>
+                  <td className="text-gray-600 max-w-xs truncate">{r.asunto}</td>
+                  <td>
                     <div className="font-medium text-gray-700">{r.solicitante?.nombres}</div>
                     <div className="text-xs text-gray-400">{r.solicitante?.identificacion}</div>
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{r.solicitante?.servicio?.nombre ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                  <td className="text-gray-600">{r.solicitante?.servicio?.nombre ?? '—'}</td>
+                  <td className="text-gray-600 whitespace-nowrap">
                     {format(new Date(r.fecha_evento + 'T00:00:00'), 'dd/MM/yyyy', { locale: es })}
                   </td>
-                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{r.hora_inicio}–{r.hora_fin}</td>
-                  <td className="px-4 py-3"><span className={statusClass[r.estado]}>{r.estado}</span></td>
-                  <td className="px-4 py-3 text-xs text-gray-500">{r.invitados?.length ?? 0}</td>
+                  <td className="text-gray-600 whitespace-nowrap">{r.hora_inicio}–{r.hora_fin}</td>
+                  <td><span className={statusClass[r.estado]}>{r.estado}</span></td>
+                  <td className="text-xs text-gray-500 text-center">{r.invitados?.length ?? 0}</td>
                 </tr>
               ))}
               {rows.length === 0 && !loading && (
@@ -204,7 +200,6 @@ export default function ReportsPage() {
               )}
             </tbody>
           </table>
-        </div>
       </div>
     </div>
   )

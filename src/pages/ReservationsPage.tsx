@@ -136,41 +136,35 @@ export default function ReservationsPage() {
       {loading ? (
         <div className="flex justify-center py-20 text-primary-500">Cargando...</div>
       ) : (
-        <div className="card overflow-hidden p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-primary-50 text-primary-700">
+        <div className="table-wrapper overflow-x-auto">
+            <table className="data-table">
+              <thead>
                 <tr>
-                  <th className="text-left px-4 py-3 font-semibold">Sala</th>
-                  <th className="text-left px-4 py-3 font-semibold">Asunto</th>
-                  <th className="text-left px-4 py-3 font-semibold">Solicitante</th>
-                  <th className="text-left px-4 py-3 font-semibold">Fecha Evento</th>
-                  <th className="text-left px-4 py-3 font-semibold">Horario</th>
-                  <th className="text-left px-4 py-3 font-semibold">Estado</th>
-                  <th className="px-4 py-3" />
+                  <th>Sala</th>
+                  <th>Asunto</th>
+                  <th>Solicitante</th>
+                  <th>Fecha Evento</th>
+                  <th>Horario</th>
+                  <th>Estado</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(r => (
-                  <tr key={r.id} className="border-t border-gray-50 hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-gray-700">{r.sala.nombre}</td>
-                    <td className="px-4 py-3 text-gray-600 max-w-xs truncate">{r.asunto}</td>
-                    <td className="px-4 py-3">
+                  <tr key={r.id}>
+                    <td className="font-medium text-gray-700">{r.sala.nombre}</td>
+                    <td className="text-gray-600 max-w-xs truncate">{r.asunto}</td>
+                    <td>
                       <div className="font-medium text-gray-700">{r.solicitante.nombres}</div>
                       <div className="text-xs text-gray-400">{r.solicitante.identificacion}</div>
                     </td>
-                    <td className="px-4 py-3 text-gray-600">
+                    <td className="text-gray-600">
                       {format(new Date(r.fecha_evento + 'T00:00:00'), 'dd/MM/yyyy', { locale: es })}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{r.hora_inicio} – {r.hora_fin}</td>
-                    <td className="px-4 py-3">
-                      <span className={statusClass[r.estado]}>{r.estado}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => setSelected(r)}
-                        className="text-primary-600 hover:text-primary-800 text-xs font-medium"
-                      >
+                    <td className="text-gray-600 whitespace-nowrap">{r.hora_inicio} – {r.hora_fin}</td>
+                    <td><span className={statusClass[r.estado]}>{r.estado}</span></td>
+                    <td>
+                      <button onClick={() => setSelected(r)} className="text-primary-600 hover:text-primary-800 text-xs font-medium">
                         Ver detalle
                       </button>
                     </td>
@@ -185,7 +179,6 @@ export default function ReservationsPage() {
                 )}
               </tbody>
             </table>
-          </div>
         </div>
       )}
 

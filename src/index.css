@@ -43,6 +43,36 @@
   .badge-rescheduled { @apply badge bg-blue-100 text-blue-800; }
 }
 
+/* ── Tablas: filas alternas + sombra ── */
+.data-table {
+  @apply w-full text-sm border-collapse;
+  box-shadow: 0 2px 12px rgba(27,79,138,0.08);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+.data-table thead tr {
+  @apply bg-primary-50 text-primary-700;
+}
+.data-table thead th {
+  @apply text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide whitespace-nowrap;
+}
+.data-table tbody tr {
+  @apply border-t border-gray-100 transition-colors hover:bg-primary-50/60;
+}
+.data-table tbody tr:nth-child(odd) {
+  @apply bg-white;
+}
+.data-table tbody tr:nth-child(even) {
+  @apply bg-slate-50/70;
+}
+.data-table tbody td {
+  @apply px-4 py-2.5;
+}
+.table-wrapper {
+  @apply rounded-xl overflow-hidden border border-primary-100;
+  box-shadow: 0 4px 20px rgba(27,79,138,0.10), 0 1px 4px rgba(27,79,138,0.06);
+}
+
 /* FullCalendar custom styles */
 .fc .fc-toolbar-title {
   @apply text-lg font-semibold text-primary-800;

@@ -72,8 +72,10 @@ export default function DashboardPage() {
     setMonthly(statuses.map(st => ({ name: st.charAt(0).toUpperCase() + st.slice(1), data: months.map(m => monthMap[m][st] ?? 0) })))
   }
 
+  const chartHeight = 240
+
   const pieOptions: Highcharts.Options = {
-    chart: { type: 'pie', style: { fontFamily: 'Inter, sans-serif' }, shadow: true },
+    chart: { type: 'pie', style: { fontFamily: 'Inter, sans-serif' }, shadow: true, height: chartHeight },
     title: { text: 'Reservaciones por Estado', style: { color: '#1B4F8A', fontSize: '14px', fontWeight: '600' } },
     tooltip: { pointFormat: '<b>{point.y}</b> reservaciones ({point.percentage:.1f}%)' },
     plotOptions: {
@@ -96,7 +98,7 @@ export default function DashboardPage() {
   }
 
   const barServiceOptions: Highcharts.Options = {
-    chart: { type: 'bar', style: { fontFamily: 'Inter, sans-serif' }, shadow: true },
+    chart: { type: 'bar', style: { fontFamily: 'Inter, sans-serif' }, shadow: true, height: chartHeight },
     title: { text: 'Reservaciones por Servicio', style: { color: '#1B4F8A', fontSize: '14px', fontWeight: '600' } },
     xAxis: { categories: byService.map(s => s.name), title: { text: null } },
     yAxis: { min: 0, title: { text: 'Cantidad' } },
@@ -106,7 +108,7 @@ export default function DashboardPage() {
   }
 
   const columnRoomOptions: Highcharts.Options = {
-    chart: { type: 'column', style: { fontFamily: 'Inter, sans-serif' }, shadow: true },
+    chart: { type: 'column', style: { fontFamily: 'Inter, sans-serif' }, shadow: true, height: chartHeight },
     title: { text: 'Uso por Sala', style: { color: '#1B4F8A', fontSize: '14px', fontWeight: '600' } },
     xAxis: { categories: byRoom.map(r => r.name) },
     yAxis: { min: 0, title: { text: 'Reservaciones' } },
@@ -116,7 +118,7 @@ export default function DashboardPage() {
   }
 
   const trendOptions: Highcharts.Options = {
-    chart: { type: 'spline', style: { fontFamily: 'Inter, sans-serif' }, shadow: true },
+    chart: { type: 'spline', style: { fontFamily: 'Inter, sans-serif' }, shadow: true, height: chartHeight },
     title: { text: 'Tendencia Mensual', style: { color: '#1B4F8A', fontSize: '14px', fontWeight: '600' } },
     xAxis: { categories: monthCategories },
     yAxis: { title: { text: 'Reservaciones' } },
