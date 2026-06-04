@@ -48,8 +48,7 @@ export default function ReportsPage() {
         ),
         invitados(email)
       `)
-      .order('fecha_evento', { ascending: false })
-      .order('hora_inicio',  { ascending: false })
+      .order('fecha_solicitud', { ascending: false })
 
     if (filters.sala_id)    q = q.eq('sala_id', filters.sala_id)
     if (filters.estado)     q = q.eq('estado', filters.estado)
@@ -70,12 +69,10 @@ export default function ReportsPage() {
       )
     }
 
-    // Mantener orden descendente tras filtros client-side
-    result.sort((a: any, b: any) => {
-      const dateDiff = (b.fecha_evento ?? '').localeCompare(a.fecha_evento ?? '')
-      if (dateDiff !== 0) return dateDiff
-      return (b.hora_inicio ?? '').localeCompare(a.hora_inicio ?? '')
-    })
+    // Mantener orden descendente por fecha de registro tras filtros client-side
+    result.sort((a: any, b: any) =>
+      (b.fecha_solicitud ?? '').localeCompare(a.fecha_solicitud ?? '')
+    )
 
     setRows(result)
     setLoading(false)
