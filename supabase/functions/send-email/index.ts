@@ -172,6 +172,64 @@ const templates: Record<string, (d: any) => { subject: string; html: string }> =
       d
     ),
   }),
+
+  // ── Plantillas para INVITADOS (mensaje diferente al del solicitante) ──────
+
+  invited: (d) => ({
+    subject: `📅 [CONVOCATORIA] Ha sido invitado(a): ${d.asunto} — ${d.fecha_evento}`,
+    html: layout(
+      'linear-gradient(135deg,#065F46 0%,#10B981 100%)',
+      'Convocatoria a Reunión',
+      `<div style="display:inline-block;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.6);border-radius:30px;padding:8px 20px">
+        <span style="color:#fff;font-size:18px;font-weight:700">📅 HA SIDO CONVOCADO(A)</span>
+      </div>`,
+      `<p style="margin:0 0 8px;font-size:16px;color:#065F46;font-weight:600">Ha sido convocado(a) a una reunión.</p>
+       <p style="margin:0;font-size:14px;color:#374151">
+         <strong>${d.solicitante_nombre ?? 'Un colaborador'}</strong>
+         ${d.solicitante_servicio ? `— ${d.solicitante_servicio}` : ''}
+         le ha convocado a asistir al siguiente evento. Por favor, tenga en cuenta la fecha y el horario indicados.
+       </p>`,
+      d
+    ),
+  }),
+
+  invited_rescheduled: (d) => ({
+    subject: `🔄 [CAMBIO DE FECHA] Reunión reprogramada: ${d.asunto} — Nueva fecha: ${d.fecha_evento}`,
+    html: layout(
+      'linear-gradient(135deg,#1E3A8A 0%,#3B82F6 100%)',
+      'Reunión Reprogramada',
+      `<div style="display:inline-block;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.6);border-radius:30px;padding:8px 20px">
+        <span style="color:#fff;font-size:18px;font-weight:700">🔄 CAMBIO DE FECHA Y/O HORARIO</span>
+      </div>`,
+      `<p style="margin:0 0 8px;font-size:16px;color:#1E3A8A;font-weight:600">La reunión a la que fue convocado(a) ha sido reprogramada.</p>
+       <p style="margin:0;font-size:14px;color:#374151">
+         Le informamos que la reunión organizada por
+         <strong>${d.solicitante_nombre ?? 'su colega'}</strong>
+         ha sido reprogramada para una nueva fecha y/o horario.
+         Tenga en cuenta los detalles actualizados a continuación.
+       </p>`,
+      d
+    ),
+  }),
+
+  invited_cancelled: (d) => ({
+    subject: `🚫 [CANCELACIÓN] Reunión cancelada: ${d.asunto} — ${d.fecha_evento}`,
+    html: layout(
+      'linear-gradient(135deg,#374151 0%,#6B7280 100%)',
+      'Reunión Cancelada',
+      `<div style="display:inline-block;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.6);border-radius:30px;padding:8px 20px">
+        <span style="color:#fff;font-size:18px;font-weight:700">🚫 REUNIÓN CANCELADA</span>
+      </div>`,
+      `<p style="margin:0 0 8px;font-size:16px;color:#374151;font-weight:600">La reunión a la que fue convocado(a) ha sido cancelada.</p>
+       <p style="margin:0;font-size:14px;color:#374151">
+         Le informamos que la reunión organizada por
+         <strong>${d.solicitante_nombre ?? 'su colega'}</strong>
+         a la que usted fue convocado(a), ha sido <strong>cancelada</strong>.
+         Consulte la observación para conocer el motivo.
+       </p>`,
+      d
+    ),
+  }),
 }
 
 // ─── Handler ─────────────────────────────────────────────────────────────────

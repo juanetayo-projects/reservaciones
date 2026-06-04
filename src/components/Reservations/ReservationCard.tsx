@@ -37,7 +37,7 @@ export default function ReservationCard({ reservacion, onAccept, onReject, onRes
   const { isAdmin } = useAuth()
 
   return (
-    <div className="card max-w-lg w-full shadow-card-hover">
+    <div className="card max-w-2xl w-full shadow-card-hover">
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div>
@@ -130,7 +130,7 @@ export default function ReservationCard({ reservacion, onAccept, onReject, onRes
 
       {/* Actions — admin only — una sola línea */}
       {isAdmin && (
-        <div className="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5 flex-nowrap overflow-x-auto">
+        <div className="mt-4 pt-3 border-t border-gray-100 flex items-center gap-2 flex-wrap">
           {reservacion.estado === 'pendiente' && (
             <>
               <button onClick={onAccept} className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap flex-shrink-0">

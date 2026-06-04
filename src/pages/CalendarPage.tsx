@@ -10,7 +10,7 @@ import ReservationForm from '../components/Reservations/ReservationForm'
 import ReservationCard from '../components/Reservations/ReservationCard'
 import ActionModal from '../components/Reservations/ActionModal'
 import type { ReservacionCompleta } from '../types/database'
-import { sendReservationEmail } from '../lib/email'
+import { sendNotifications } from '../lib/email'
 import toast from 'react-hot-toast'
 import { useAuth } from '../contexts/AuthContext'
 import { Filter, CalendarDays, Clock, MapPin, User } from 'lucide-react'
@@ -152,27 +152,24 @@ export default function CalendarPage() {
       reservacion_id: selectedRes.id, estado_anterior: selectedRes.estado,
       estado_nuevo: newStatus as any, observacion: data.observacion, usuario_id: user?.id,
     })
-    // Notificaciones por correo
-    // Aceptada / Reprogramada / Cancelada → solicitante + invitados
-    // Rechazada → solo solicitante
+    // Notificaciones por correo (no-blocking)
     if (['aceptada', 'rechazada', 'reprogramada', 'cancelada'].includes(newStatus)) {
-      try {
-        const emailType = { accept:'accepted', reject:'rejected', reschedule:'rescheduled', cancel:'cancelled' }[action!] ?? 'accepted'
-        const recipients = [selectedRes.solicitante.email]
-        if (newStatus !== 'rechazada') recipients.push(...selectedRes.invitados.map(i => i.email))
-        const resData = {
-          ...selectedRes,
-          ...updates,
-          sala_nombre:      selectedRes.sala.nombre,
-          sala_ubicacion:   selectedRes.sala.ubicacion,
-          sede_nombre:      (selectedRes.sala as any).sede?.nombre ?? '',
-          solicitante_nombre: selectedRes.solicitante.nombres,
-          solicitante_email:  selectedRes.solicitante.email,
-          solicitante_servicio: (selectedRes.solicitante as any).servicio?.nombre ?? '',
-          invitados_emails: selectedRes.invitados.map(i => i.email),
-        }
-        await sendReservationEmail({ type: emailType, to: recipients, reservationData: resData })
-      } catch { /* non-blocking */ }
+      const resData = {
+        ...selectedRes, ...updates,
+        sala_nombre:          selectedRes.sala.nombre,
+        sala_ubicacion:       selectedRes.sala.ubicacion,
+        sede_nombre:          (selectedRes.sala as any).sede?.nombre ?? '',
+        solicitante_nombre:   selectedRes.solicitante.nombres,
+        solicitante_email:    selectedRes.solicitante.email,
+        solicitante_servicio: (selectedRes.solicitante as any).servicio?.nombre ?? '',
+        invitados_emails:     selectedRes.invitados.map(i => i.email),
+      }
+      sendNotifications(
+        action!,
+        selectedRes.solicitante.email,
+        selectedRes.invitados.map(i => i.email),
+        resData
+      ).catch(() => {}) // non-blocking
     }
     toast.success('Reservación actualizada')
     setAction(null); setSelectedRes(null); loadEvents()

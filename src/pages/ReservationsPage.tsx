@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import type { ReservacionCompleta, ReservationStatus } from '../types/database'
 import ReservationCard from '../components/Reservations/ReservationCard'
 import ActionModal from '../components/Reservations/ActionModal'
-import { sendReservationEmail } from '../lib/email'
+import { sendNotifications } from '../lib/email'
 import toast from 'react-hot-toast'
 import { useAuth } from '../contexts/AuthContext'
 import { Search, Filter } from 'lucide-react'
@@ -103,23 +103,22 @@ export default function ReservationsPage() {
       observacion: data.observacion, usuario_id: user?.id,
     })
     if (['aceptada', 'rechazada', 'reprogramada', 'cancelada'].includes(newStatus)) {
-      try {
-        const emailType = { accept:'accepted', reject:'rejected', reschedule:'rescheduled', cancel:'cancelled' }[action!] ?? 'accepted'
-        const recipients = [selected.solicitante.email]
-        if (newStatus !== 'rechazada') recipients.push(...selected.invitados.map(i => i.email))
-        const resData = {
-          ...selected,
-          ...updates,
-          sala_nombre:        selected.sala.nombre,
-          sala_ubicacion:     selected.sala.ubicacion,
-          sede_nombre:        (selected.sala as any).sede?.nombre ?? '',
-          solicitante_nombre: selected.solicitante.nombres,
-          solicitante_email:  selected.solicitante.email,
-          solicitante_servicio: (selected.solicitante as any).servicio?.nombre ?? '',
-          invitados_emails:   selected.invitados.map(i => i.email),
-        }
-        await sendReservationEmail({ type: emailType, to: recipients, reservationData: resData })
-      } catch { /* non-blocking */ }
+      const resData = {
+        ...selected, ...updates,
+        sala_nombre:          selected.sala.nombre,
+        sala_ubicacion:       selected.sala.ubicacion,
+        sede_nombre:          (selected.sala as any).sede?.nombre ?? '',
+        solicitante_nombre:   selected.solicitante.nombres,
+        solicitante_email:    selected.solicitante.email,
+        solicitante_servicio: (selected.solicitante as any).servicio?.nombre ?? '',
+        invitados_emails:     selected.invitados.map(i => i.email),
+      }
+      sendNotifications(
+        action!,
+        selected.solicitante.email,
+        selected.invitados.map(i => i.email),
+        resData
+      ).catch(() => {})
     }
     toast.success('Reservación actualizada')
     setAction(null); setSelected(null); load()
