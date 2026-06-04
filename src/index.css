@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans bg-gray-50 text-gray-900 antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-white border border-primary-200 hover:bg-primary-50 text-primary-700 font-medium px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2;
+  }
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2;
+  }
+  .btn-success {
+    @apply bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2;
+  }
+  .card {
+    @apply bg-white rounded-xl shadow-card border border-gray-100 p-6;
+  }
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+  .form-input {
+    @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all;
+  }
+  .form-error {
+    @apply text-red-500 text-xs mt-1;
+  }
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .badge-pending   { @apply badge bg-yellow-100 text-yellow-800; }
+  .badge-accepted  { @apply badge bg-emerald-100 text-emerald-800; }
+  .badge-rejected  { @apply badge bg-red-100 text-red-800; }
+  .badge-cancelled { @apply badge bg-gray-100 text-gray-700; }
+  .badge-rescheduled { @apply badge bg-blue-100 text-blue-800; }
+}
+
+/* FullCalendar custom styles */
+.fc .fc-toolbar-title {
+  @apply text-lg font-semibold text-primary-800;
+}
+.fc .fc-button-primary {
+  @apply bg-primary-600 border-primary-600 !important;
+}
+.fc .fc-button-primary:hover {
+  @apply bg-primary-700 border-primary-700 !important;
+}
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  @apply bg-primary-700 border-primary-700 !important;
+}
+.fc-event {
+  cursor: pointer !important;
+}
+.fc .fc-daygrid-event {
+  @apply rounded text-xs font-medium;
+}

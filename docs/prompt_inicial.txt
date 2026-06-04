@@ -1,0 +1,117 @@
+PROYECTO AGENDA SALA REUNIONES PISO 8
+=====================================
+
+Se requiere construir una app que permita
+
+	Desde mi pc en la ruta C:\Users\Juan Carlos Etayo\reservaciones se debe desplegar el proyecto
+	En la ruta: C:\Users\Juan Carlos Etayo\reservaciones\images se encuentran los logos de la Clinica
+	
+	
+0.- Aplicacion para gestion de agenda de salas de reuniones y capacitaciones
+	La solicitud de una sala debe hacerse desde el calendario
+	Seleccionar desde una lista desplegable la sala a reservar
+	La aplicacion debe mostrar la disponibilidad de la sala
+	Una vez se tenga la disponibilidad de la sala la app debe pedir todos los datos de la persona solicitante
+	La app debe pedir el # de identificacion del solicitante, si este ya existe en la base de datos debe mostrar todos los datos con opcion de actualizacion
+	de lo contrario solicita todos los datos
+	En la solicitud se deben solicitar los emails de los convocados a la reunion o capacitaciones
+	Los espacios reservados deben ser marcados y destacados en el calendario
+	Si se selecciona un espacio ya previamente reservado debe mostrarse en una tarjeta tipo odoo.com la informacion de esa reservado
+	
+
+1.- Diligenciar a traves de un formulario la solicitud de espacio para ocupar la sala de reuniones
+	El formulario debe contener:
+	
+	Datos del solicitante
+	.- Fecha y hora de la solicitud
+	.- Nombre del solicitante
+	.- Servicio al que pertenece (lista desplegable)
+	.- Telefono contacto
+	.- Correo electronio
+	
+	Datos del Evento
+	.- Asunto o motivo de la reuniones
+	.- Fecha del evento
+	.- Hora de inicio evento
+	.- Hora final evento
+	.- Descripcion del evento
+ 
+	
+2.- La solicitud debe quedar registrada en una tabla de la base de datos de Supabase
+	
+	El Gestor de la app debe tener acceso a:
+	.- Modulo de registros
+	.- Se debe contar con las opciones de:
+		Editar
+		Cancelar (incluir observaciones del motivo de cancelacion)
+		Reprogramar la Hora o Fecha del evento (incluir observacion, enviar notificacion al solicitante, solo se notificara a los invitados cuando la reserva sea aceptada)
+		Rechazar (incluir observacion y notificar a traves de correo a la persona solicitante del motivo de la cancelacion)
+		Aceptar (enviar correo de notificacion al solicitante y a todos los invitados en formato html profesional)
+		
+3-. Se debe contar con un historico de uso de la sala
+	.- Dashboard de metricas (tipo odoo.com)
+	.- Filtros por servicio
+	.- Filtros por solicitante
+	.- Filtros todos los posibles
+	.- Graficos, tablas con diseño tipo www.odoo.com o utilizando libreria tipo highcharts utilizando sombras para destacar
+
+4.-  Utilizar el logo de la Clinica
+	.- Utilizar colores relacionados con el logo
+	.- Opcion de administracion de usuarios (CRUD)
+	.- Opcion de recuperacion de contraseña
+	.-
+	
+5.- Reportes
+	.- Todos los posibles
+	.- Con opcion de exportar a Excel
+	.-
+	
+6.- Infraestructura
+	.- Github
+	.- Supabase
+	.- Resend
+	.- Calendar
+	.- Higcharts
+	.- Odoo.com
+	.- 
+
+7.- La base de datos debe estar en Supabase
+
+	Notas:
+		Todas las tablas deben tener opcion (CRUD) para la gestion
+		Se debe contemplar todas las opciones de permisos y accesos que requiera Supabase
+		
+		
+	.- Tabla de usuarios (dede contener opcion de recuperacion de contraseña y toda la gestion desde la app, sin que sea necesario ingresar a Supabase)
+		Id
+		Nombres
+		email
+		Telefono
+		
+	.- Tabla de ubicaciones o salas
+		Id
+		Sede
+		Ubicacion
+		Descripcion
+		Capacidad (sillas)
+	
+	.- Tabla de sedes
+		Id
+		Sede
+		Descripcion
+	
+	.- Tabla de registros
+	
+	.- Tabla de Perfiles
+		.- Id
+		.- Perfil (Administrador, Analista)
+		
+	.- 
+	
+8.- Resumen
+	.- Se debe generar el super prompt basado en estas notas y todos los cambios que surgan del desarrollo
+	.- De debe contar con todo el codigo fuente de la aplicacion para futuros cambios o despligues en otro servidor
+	.- Se deben generar todos los archivos .MD necesarios
+	.- Se debe generar un informe de la estructura del proyecto
+	
+	
