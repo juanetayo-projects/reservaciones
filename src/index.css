@@ -94,6 +94,11 @@
 .fc-day-holiday.fc-day-today .fc-daygrid-day-frame {
   background-color: inherit !important;
 }
+/* cursor bloqueado en días no disponibles */
+.fc-day-sunday,
+.fc-day-holiday {
+  cursor: not-allowed !important;
+}
 
 /* FullCalendar custom styles */
 .fc .fc-toolbar-title {

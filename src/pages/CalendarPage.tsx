@@ -16,7 +16,12 @@ import { useAuth } from '../contexts/AuthContext'
 import { Filter, CalendarDays, Clock, MapPin, User } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { getColombianHolidays, isBlockedDay } from '../lib/colombianHolidays'
+import { getColombianHolidays, isBlockedDay, getHolidayName } from '../lib/colombianHolidays'
+
+/** Formatea Date UTC a YYYY-MM-DD (evita offset de timezone) */
+function fmt(d: Date): string {
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`
+}
 
 const STATUS_LABELS: Record<string, string> = {
   pendiente: 'Pendiente', aceptada: 'Aceptada',
@@ -139,9 +144,13 @@ export default function CalendarPage() {
     const dateStr = arg.startStr.split('T')[0]
     if (dateStr < today) return
     if (isBlockedDay(dateStr, holidays)) {
-      const d = new Date(dateStr + 'T00:00:00')
-      const msg = d.getDay() === 0 ? 'No se pueden hacer reservaciones los domingos.' : 'Este día es festivo en Colombia y no se permiten reservaciones.'
-      toast.error(msg, { icon: '🚫' })
+      const [y, m, d] = dateStr.split('-').map(Number)
+      const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay()
+      const nombre = getHolidayName(dateStr, y)
+      const msg = dow === 0
+        ? '🚫 Los domingos no se permiten reservaciones.'
+        : `🚫 ${nombre} — Este día es festivo en Colombia y no está disponible para reservaciones.`
+      toast.error(msg, { duration: 4000 })
       return
     }
     setSelectedDate(dateStr)
@@ -244,12 +253,13 @@ export default function CalendarPage() {
             const dateStr = selectInfo.startStr.split('T')[0]
             return !isBlockedDay(dateStr, holidays)
           }}
-          // Colorear domingos y festivos
+          // Colorear domingos y festivos — SIEMPRE usar UTC para evitar offset Colombia
           dayCellClassNames={(arg: DayCellContentArg) => {
-            const dateStr = arg.date.toISOString().split('T')[0]
-            const isSunday = arg.date.getDay() === 0
-            const isHoliday = holidays.has(dateStr)
-            if (isSunday) return ['fc-day-sunday']
+            // arg.date llega como UTC desde FullCalendar
+            const dateStr = fmt(arg.date)          // UTC YYYY-MM-DD
+            const isSunday  = arg.date.getUTCDay() === 0   // 0 = domingo UTC
+            const isHoliday = holidays.has(dateStr) && !isSunday
+            if (isSunday)  return ['fc-day-sunday']
             if (isHoliday) return ['fc-day-holiday']
             return []
           }}
