@@ -50,9 +50,9 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-primary-700 to-primary-900 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
         <div className="flex flex-col items-center mb-8">
-          <img src="/images/logo_cacsb2.png" alt="Clínica Santa Bárbara" className="h-16 object-contain mb-4" />
-          <h1 className="text-xl font-bold text-primary-800">Agenda de Salas de Reuniones</h1>
-          <p className="text-sm text-gray-500 mt-1">Piso 8 — Clínica Santa Bárbara</p>
+          <img src={`${import.meta.env.BASE_URL}images/logo_cacsb2.png`} alt="Clínica Santa Bárbara" className="h-20 object-contain mb-4" />
+          <h1 className="text-xl font-bold text-primary-800">Clínica Santa Bárbara</h1>
+          <p className="text-sm text-gray-500 mt-1">Sistema de Agenda de Salas de Reuniones</p>
         </div>
 
         {recovery ? (

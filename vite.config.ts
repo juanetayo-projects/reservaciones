@@ -1,10 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { viteStaticCopy } from 'vite-plugin-static-copy'
 
-// En GitHub Pages el repositorio se sirve como /reservaciones/
-// En producción con dominio propio usar base: '/'
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    viteStaticCopy({
+      targets: [{ src: 'images/*', dest: 'images' }],
+    }),
+  ],
   base: process.env.VITE_BASE_PATH ?? '/',
   resolve: {
     alias: {

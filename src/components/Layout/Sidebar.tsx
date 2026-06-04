@@ -25,7 +25,7 @@ export default function Sidebar() {
     <aside className="w-64 min-h-screen bg-primary-800 text-white flex flex-col">
       {/* Logo */}
       <div className="px-6 py-5 border-b border-primary-700 flex flex-col items-center gap-2">
-        <img src="/images/logo_cacsb_blanc.png" alt="Clínica Santa Bárbara" className="h-12 object-contain" />
+        <img src={`${import.meta.env.BASE_URL}images/logo_cacsb_blanc.png`} alt="Clínica Santa Bárbara" className="h-12 object-contain" />
         <span className="text-xs text-primary-200 font-medium tracking-wide">AGENDA DE SALAS</span>
       </div>
 
