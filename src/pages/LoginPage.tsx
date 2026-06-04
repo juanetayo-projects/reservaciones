@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
@@ -14,11 +15,15 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 export default function LoginPage() {
-  const { signIn } = useAuth()
+  const { signIn, user } = useAuth()
+  const navigate = useNavigate()
   const [showPass, setShowPass] = useState(false)
   const [recovery, setRecovery] = useState(false)
   const [recoveryEmail, setRecoveryEmail] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Si ya está autenticado, redirigir al inicio
+  if (user) return <Navigate to="/" replace />
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -27,6 +32,7 @@ export default function LoginPage() {
   async function onSubmit(data: FormData) {
     try {
       await signIn(data.email, data.password)
+      navigate('/')
     } catch {
       toast.error('Credenciales incorrectas')
     }

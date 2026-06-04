@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [
     react(),
     viteStaticCopy({
-      targets: [{ src: 'images/*', dest: 'images' }],
+      targets: [{ src: 'images', dest: '' }],
     }),
   ],
   base: process.env.VITE_BASE_PATH ?? '/',
