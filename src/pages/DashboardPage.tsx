@@ -1,16 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 import { supabase } from '../lib/supabase'
-import { CalendarDays, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { CalendarDays, CheckCircle, XCircle, Clock, Filter } from 'lucide-react'
 
 interface Stats {
-  total: number
-  pendiente: number
-  aceptada: number
-  rechazada: number
-  cancelada: number
-  reprogramada: number
+  total: number; pendiente: number; aceptada: number
+  rechazada: number; cancelada: number; reprogramada: number
 }
 
 export default function DashboardPage() {
@@ -19,24 +15,36 @@ export default function DashboardPage() {
   const [byRoom, setByRoom] = useState<{ name: string; y: number }[]>([])
   const [monthly, setMonthly] = useState<{ name: string; data: number[] }[]>([])
   const [monthCategories, setMonthCategories] = useState<string[]>([])
-  const [filterService, setFilterService] = useState('')
   const [services, setServices] = useState<{ id: number; nombre: string }[]>([])
+  const [salas, setSalas] = useState<{ id: number; nombre: string }[]>([])
+  const [filters, setFilters] = useState({
+    servicio_id: '', sala_id: '', estado: '', desde: '', hasta: '',
+  })
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     supabase.from('servicios').select('id, nombre').then(({ data }) => setServices(data ?? []))
-    loadData()
+    supabase.from('salas').select('id, nombre').eq('activa', true).then(({ data }) => setSalas(data ?? []))
   }, [])
 
-  useEffect(() => { loadData() }, [filterService])
+  // Auto-filtro al cambiar filtros
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => loadData(), 0)
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+  }, [filters])
 
   async function loadData() {
     let q = supabase.from('reservaciones').select(`
-      estado,
-      sala:salas(nombre),
-      solicitante:usuarios!reservaciones_solicitante_id_fkey(servicio:servicios(nombre)),
-      fecha_evento
+      id, estado, fecha_evento,
+      sala:salas(id, nombre),
+      solicitante:usuarios!reservaciones_solicitante_id_fkey(servicio_id, servicio:servicios(nombre))
     `)
-    if (filterService) q = q.eq('solicitante.servicio_id', filterService)
+    if (filters.sala_id)     q = q.eq('sala_id', filters.sala_id)
+    if (filters.estado)      q = q.eq('estado', filters.estado)
+    if (filters.desde)       q = q.gte('fecha_evento', filters.desde)
+    if (filters.hasta)       q = q.lte('fecha_evento', filters.hasta)
+    if (filters.servicio_id) q = q.eq('solicitante.servicio_id', filters.servicio_id)
 
     const { data } = await q
     if (!data) return
@@ -140,17 +148,58 @@ export default function DashboardPage() {
   ]
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-primary-800">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-1">Métricas de uso de salas de reuniones</p>
+          <h1 className="text-xl font-bold text-primary-800">Dashboard</h1>
+          <p className="text-xs text-gray-500 mt-0.5">Métricas de uso de salas de reuniones</p>
         </div>
-        <div>
-          <select value={filterService} onChange={e => setFilterService(e.target.value)} className="form-input w-56">
-            <option value="">Todos los servicios</option>
-            {services.map(s => <option key={s.id} value={String(s.id)}>{s.nombre}</option>)}
-          </select>
+      </div>
+
+      {/* Barra de filtros */}
+      <div className="bg-white rounded-xl border border-primary-100 shadow-card px-4 py-2.5">
+        <div className="flex items-end gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 text-primary-600 font-semibold text-xs flex-shrink-0 mb-1">
+            <Filter size={13} /><span>Filtros</span>
+          </div>
+          <div className="h-5 w-px bg-gray-200 flex-shrink-0" />
+          <div className="min-w-[120px] flex-1">
+            <label className="form-label text-xs mb-0.5">Sala</label>
+            <select value={filters.sala_id} onChange={e => setFilters(f => ({ ...f, sala_id: e.target.value }))} className="form-input py-1.5 text-xs">
+              <option value="">Todas</option>
+              {salas.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
+            </select>
+          </div>
+          <div className="min-w-[130px] flex-1">
+            <label className="form-label text-xs mb-0.5">Servicio</label>
+            <select value={filters.servicio_id} onChange={e => setFilters(f => ({ ...f, servicio_id: e.target.value }))} className="form-input py-1.5 text-xs">
+              <option value="">Todos</option>
+              {services.map(s => <option key={s.id} value={String(s.id)}>{s.nombre}</option>)}
+            </select>
+          </div>
+          <div className="min-w-[100px]">
+            <label className="form-label text-xs mb-0.5">Estado</label>
+            <select value={filters.estado} onChange={e => setFilters(f => ({ ...f, estado: e.target.value }))} className="form-input py-1.5 text-xs">
+              <option value="">Todos</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="aceptada">Aceptada</option>
+              <option value="rechazada">Rechazada</option>
+              <option value="cancelada">Cancelada</option>
+              <option value="reprogramada">Reprogramada</option>
+            </select>
+          </div>
+          <div className="min-w-[105px]">
+            <label className="form-label text-xs mb-0.5">Desde</label>
+            <input type="date" value={filters.desde} onChange={e => setFilters(f => ({ ...f, desde: e.target.value }))} className="form-input py-1.5 text-xs" />
+          </div>
+          <div className="min-w-[105px]">
+            <label className="form-label text-xs mb-0.5">Hasta</label>
+            <input type="date" value={filters.hasta} onChange={e => setFilters(f => ({ ...f, hasta: e.target.value }))} className="form-input py-1.5 text-xs" />
+          </div>
+          <button onClick={() => setFilters({ servicio_id:'', sala_id:'', estado:'', desde:'', hasta:'' })}
+            className="text-xs text-gray-500 hover:text-primary-600 flex-shrink-0 self-end pb-1.5 underline">
+            Limpiar
+          </button>
         </div>
       </div>
 

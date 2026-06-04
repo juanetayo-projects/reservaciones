@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -20,11 +20,19 @@ export default function ReportsPage() {
     solicitante: '',
   })
 
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   useEffect(() => {
     supabase.from('salas').select('id, nombre').then(({ data }) => setSalas(data ?? []))
     supabase.from('servicios').select('id, nombre').then(({ data }) => setServicios(data ?? []))
-    fetchReport()
   }, [])
+
+  // Auto-filtro al cambiar cualquier filtro
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => fetchReport(), filters.solicitante ? 400 : 0)
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+  }, [filters])
 
   async function fetchReport() {
     setLoading(true)
@@ -160,9 +168,7 @@ export default function ReportsPage() {
               placeholder="Nombre o ID" className="form-input py-1.5 text-xs" />
           </div>
           </div>
-          <button onClick={fetchReport} disabled={loading} className="btn-primary text-xs px-3 py-1.5 flex-shrink-0 self-end">
-            {loading ? 'Buscando...' : 'Buscar'}
-          </button>
+          {loading && <span className="text-xs text-primary-400 flex-shrink-0 self-end pb-1.5">Buscando...</span>}
         </div>
       </div>
 

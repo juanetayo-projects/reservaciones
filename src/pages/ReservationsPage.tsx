@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import type { ReservacionCompleta, ReservationStatus } from '../types/database'
 import ReservationCard from '../components/Reservations/ReservationCard'
@@ -27,12 +27,19 @@ export default function ReservationsPage() {
   const [filters, setFilters] = useState({
     search: '', sala_id: '', servicio_id: '', estado: '', desde: '', hasta: '',
   })
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     supabase.from('salas').select('id, nombre').eq('activa', true).then(({ data }) => setSalas(data ?? []))
     supabase.from('servicios').select('id, nombre').order('nombre').then(({ data }) => setServicios(data ?? []))
-    load()
   }, [])
+
+  // Auto-filtro: debounce 400ms para texto, inmediato para selects/fechas
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => { load() }, filters.search ? 400 : 0)
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+  }, [filters])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -75,8 +82,6 @@ export default function ReservationsPage() {
     setRows(result)
     setLoading(false)
   }, [filters])
-
-  function applyFilters() { load() }
 
   async function executeAction(data: { observacion?: string; fecha?: string; horaInicio?: string; horaFin?: string }) {
     if (!selected || !action) return
@@ -133,7 +138,6 @@ export default function ReservationsPage() {
               <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
               <input value={filters.search}
                 onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
-                onKeyDown={e => e.key === 'Enter' && applyFilters()}
                 placeholder="Asunto, solicitante, ID..."
                 className="form-input py-1.5 text-xs pl-7" />
             </div>
@@ -184,10 +188,7 @@ export default function ReservationsPage() {
               className="form-input py-1.5 text-xs" />
           </div>
 
-          <button onClick={applyFilters} disabled={loading}
-            className="btn-primary text-xs py-1.5 px-3 flex-shrink-0">
-            {loading ? '...' : 'Buscar'}
-          </button>
+          {loading && <span className="text-xs text-primary-400 flex-shrink-0 self-end pb-1.5">Buscando...</span>}
         </div>
       </div>
 
@@ -203,7 +204,8 @@ export default function ReservationsPage() {
                   <th>Sala</th>
                   <th>Asunto</th>
                   <th>Solicitante</th>
-                  <th>Fecha Evento</th>
+                  <th>Servicio</th>
+                  <th>Fecha</th>
                   <th>Horario</th>
                   <th>Estado</th>
                   <th />
@@ -212,13 +214,16 @@ export default function ReservationsPage() {
               <tbody>
                 {rows.map(r => (
                   <tr key={r.id}>
-                    <td className="font-medium text-gray-700">{r.sala.nombre}</td>
-                    <td className="text-gray-600 max-w-[200px] truncate">{r.asunto}</td>
+                    <td className="font-medium text-gray-700 whitespace-nowrap">{r.sala.nombre}</td>
+                    <td className="text-gray-600 max-w-[180px] truncate">{r.asunto}</td>
                     <td>
                       <div className="font-medium text-gray-700">{r.solicitante.nombres}</div>
                       <div className="text-xs text-gray-400">{r.solicitante.identificacion}</div>
                     </td>
-                    <td className="text-gray-600 whitespace-nowrap">
+                    <td className="text-gray-500 text-xs whitespace-nowrap">
+                      {(r.solicitante as any).servicio?.nombre ?? '—'}
+                    </td>
+                    <td className="text-gray-600 whitespace-nowrap text-xs">
                       {format(new Date(r.fecha_evento + 'T00:00:00'), 'dd/MM/yyyy', { locale: es })}
                     </td>
                     <td className="text-gray-600 whitespace-nowrap text-xs">{r.hora_inicio} – {r.hora_fin}</td>
@@ -232,7 +237,7 @@ export default function ReservationsPage() {
                   </tr>
                 ))}
                 {rows.length === 0 && (
-                  <tr><td colSpan={7} className="px-4 py-12 text-center text-gray-400">Sin resultados</td></tr>
+                  <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-400">Sin resultados</td></tr>
                 )}
               </tbody>
             </table>

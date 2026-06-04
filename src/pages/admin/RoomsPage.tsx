@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, Building2 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -138,22 +138,50 @@ export default function RoomsPage() {
       )}
 
       {tab === 'sedes' && (
-        <div className="card overflow-hidden p-0">
-          <table className="w-full text-sm">
-            <thead className="bg-primary-50 text-primary-700">
-              <tr>{['Nombre','Descripción',''].map(h => <th key={h} className="text-left px-4 py-3 font-semibold">{h}</th>)}</tr>
+        <div className="table-wrapper">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nombre de la Sede</th>
+                <th>Descripción</th>
+                <th>Salas</th>
+                <th>Acciones</th>
+              </tr>
             </thead>
             <tbody>
-              {sedes.map(s => (
-                <tr key={s.id} className="border-t border-gray-50 hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-700">{s.nombre}</td>
-                  <td className="px-4 py-3 text-gray-600">{s.descripcion ?? '—'}</td>
-                  <td className="px-4 py-3 flex gap-2">
-                    <button onClick={() => { setEditingSede(s); sedeForm.reset({ nombre: s.nombre, descripcion: s.descripcion ?? '' }); setShowSedeForm(true) }} className="text-primary-600 hover:text-primary-800"><Pencil size={15} /></button>
-                    <button onClick={() => deleteSede(s.id)} className="text-red-400 hover:text-red-600"><Trash2 size={15} /></button>
-                  </td>
-                </tr>
-              ))}
+              {sedes.length === 0 && (
+                <tr><td colSpan={5} className="px-4 py-10 text-center text-gray-400">No hay sedes registradas</td></tr>
+              )}
+              {sedes.map((s, idx) => {
+                const salasCount = salas.filter(sl => sl.sede_id === s.id).length
+                return (
+                  <tr key={s.id}>
+                    <td className="text-gray-400 text-xs">{idx + 1}</td>
+                    <td>
+                      <div className="font-semibold text-primary-800">{s.nombre}</div>
+                    </td>
+                    <td className="text-gray-600 max-w-xs">{s.descripcion ?? <span className="text-gray-300 italic">Sin descripción</span>}</td>
+                    <td>
+                      <span className="badge bg-primary-100 text-primary-700">{salasCount} sala{salasCount !== 1 ? 's' : ''}</span>
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => { setEditingSede(s); sedeForm.reset({ nombre: s.nombre, descripcion: s.descripcion ?? '' }); setShowSedeForm(true) }}
+                          className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-800 font-medium">
+                          <Pencil size={13} /> Editar
+                        </button>
+                        <button
+                          onClick={() => deleteSede(s.id)}
+                          className="flex items-center gap-1 text-xs text-red-400 hover:text-red-600 font-medium">
+                          <Trash2 size={13} /> Eliminar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -218,20 +246,67 @@ export default function RoomsPage() {
       {/* Sede Form Modal */}
       {showSedeForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-            <h2 className="text-lg font-bold text-primary-800 mb-5">{editingSede ? 'Editar sede' : 'Nueva sede'}</h2>
-            <form onSubmit={sedeForm.handleSubmit(onSedeSubmit)} className="space-y-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary-100 rounded-lg">
+                  <Building2 size={18} className="text-primary-600" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-primary-800">
+                    {editingSede ? 'Editar sede' : 'Nueva sede'}
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    {editingSede ? `ID: ${editingSede.id}` : 'Complete los datos de la sede'}
+                  </p>
+                </div>
+              </div>
+              <button onClick={() => setShowSedeForm(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+            </div>
+
+            <form onSubmit={sedeForm.handleSubmit(onSedeSubmit)} className="p-6 space-y-4">
               <div>
-                <label className="form-label">Nombre *</label>
-                <input {...sedeForm.register('nombre')} className="form-input" />
+                <label className="form-label">Nombre de la sede *</label>
+                <input
+                  {...sedeForm.register('nombre')}
+                  className="form-input"
+                  placeholder="Ej: Sede Principal, Torre Norte..."
+                  autoFocus
+                />
+                {sedeForm.formState.errors.nombre && (
+                  <p className="form-error">{sedeForm.formState.errors.nombre.message}</p>
+                )}
               </div>
               <div>
                 <label className="form-label">Descripción</label>
-                <textarea {...sedeForm.register('descripcion')} rows={3} className="form-input" />
+                <textarea
+                  {...sedeForm.register('descripcion')}
+                  rows={3}
+                  className="form-input resize-none"
+                  placeholder="Dirección, referencia o descripción de la sede..."
+                />
               </div>
-              <div className="flex gap-3 justify-end">
-                <button type="button" onClick={() => setShowSedeForm(false)} className="btn-secondary">Cancelar</button>
-                <button type="submit" className="btn-primary">Guardar</button>
+
+              {/* Info de salas asociadas (solo en edición) */}
+              {editingSede && (() => {
+                const count = salas.filter(s => s.sede_id === editingSede.id).length
+                return count > 0 ? (
+                  <div className="bg-primary-50 border border-primary-100 rounded-lg px-4 py-3">
+                    <p className="text-xs text-primary-700">
+                      <strong>Esta sede tiene {count} sala{count !== 1 ? 's' : ''} asociada{count !== 1 ? 's' : ''}.</strong> Al eliminar la sede, las salas también serían eliminadas.
+                    </p>
+                  </div>
+                ) : null
+              })()}
+
+              <div className="flex gap-3 justify-end pt-2 border-t border-gray-100">
+                <button type="button" onClick={() => setShowSedeForm(false)} className="btn-secondary">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={sedeForm.formState.isSubmitting} className="btn-primary">
+                  {sedeForm.formState.isSubmitting ? 'Guardando...' : editingSede ? 'Actualizar' : 'Crear sede'}
+                </button>
               </div>
             </form>
           </div>
