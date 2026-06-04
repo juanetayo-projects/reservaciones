@@ -128,29 +128,29 @@ export default function ReservationCard({ reservacion, onAccept, onReject, onRes
         </p>
       </div>
 
-      {/* Actions — admin only */}
+      {/* Actions — admin only — una sola línea */}
       {isAdmin && (
-        <div className="mt-5 pt-4 border-t border-gray-100 flex flex-wrap gap-2">
+        <div className="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5 flex-nowrap overflow-x-auto">
           {reservacion.estado === 'pendiente' && (
             <>
-              <button onClick={onAccept} className="btn-success text-xs px-3 py-1.5">
-                <CheckCircle size={14} /> Aceptar
+              <button onClick={onAccept} className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap flex-shrink-0">
+                <CheckCircle size={13} /> Aceptar
               </button>
-              <button onClick={onReject} className="btn-danger text-xs px-3 py-1.5">
-                <XCircle size={14} /> Rechazar
+              <button onClick={onReject} className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap flex-shrink-0">
+                <XCircle size={13} /> Rechazar
               </button>
-              <button onClick={onReschedule} className="btn-secondary text-xs px-3 py-1.5">
-                <RotateCcw size={14} /> Reprogramar
+              <button onClick={onReschedule} className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap flex-shrink-0">
+                <RotateCcw size={13} /> Reprogramar
               </button>
             </>
           )}
           {['pendiente', 'aceptada', 'reprogramada'].includes(reservacion.estado) && (
             <>
-              <button onClick={onEdit} className="btn-secondary text-xs px-3 py-1.5">
-                <Pencil size={14} /> Editar
+              <button onClick={onEdit} className="flex items-center gap-1 bg-white border border-primary-200 text-primary-700 hover:bg-primary-50 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap flex-shrink-0">
+                <Pencil size={13} /> Editar
               </button>
-              <button onClick={onCancel} className="text-xs px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 flex items-center gap-1.5">
-                <Ban size={14} /> Cancelar
+              <button onClick={onCancel} className="flex items-center gap-1 bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap flex-shrink-0">
+                <Ban size={13} /> Cancelar
               </button>
             </>
           )}
