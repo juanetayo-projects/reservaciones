@@ -105,34 +105,90 @@ export default function DashboardPage() {
     credits: { enabled: false },
   }
 
+  // Tooltip estilo Odoo: tarjeta con sombra, sin bordes, HTML
+  const odooTooltip: Highcharts.TooltipOptions = {
+    useHTML: true,
+    borderWidth: 0,
+    borderRadius: 12,
+    shadow: { color: 'rgba(27,79,138,0.20)', width: 20, offsetY: 8 },
+    padding: 0,
+    backgroundColor: 'transparent',
+    formatter(this: any) {
+      return `<div style="background:#fff;border-radius:12px;padding:14px 18px;min-width:180px;
+        font-family:Inter,Arial,sans-serif;box-shadow:0 8px 32px rgba(27,79,138,0.16);border:1px solid #EFF6FF">
+        <div style="color:#1B4F8A;font-weight:700;font-size:13px;margin-bottom:10px;
+          padding-bottom:8px;border-bottom:2px solid #EFF6FF">${this.x ?? this.point?.name ?? ''}</div>
+        ${this.points
+          ? this.points.map((p: any) => `
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <span style="width:10px;height:10px;border-radius:50%;background:${p.color};flex-shrink:0;
+                box-shadow:0 2px 4px ${p.color}66"></span>
+              <span style="color:#64748B;font-size:12px;flex:1">${p.series.name}</span>
+              <span style="color:#1B4F8A;font-weight:700;font-size:15px">${p.y}</span>
+            </div>`).join('')
+          : `<div style="display:flex;align-items:center;gap:8px">
+              <span style="width:10px;height:10px;border-radius:50%;background:${this.color};flex-shrink:0"></span>
+              <span style="color:#64748B;font-size:12px;flex:1">${this.series?.name ?? ''}</span>
+              <span style="color:#1B4F8A;font-weight:700;font-size:15px">${this.y}</span>
+             </div>`
+        }
+      </div>`
+    },
+    shared: true,
+  }
+
+  // Barras horizontales por servicio → spline (línea suavizada)
   const barServiceOptions: Highcharts.Options = {
     chart: { type: 'bar', style: { fontFamily: 'Inter, sans-serif' }, shadow: true, height: chartHeight },
     title: { text: 'Reservaciones por Servicio', style: { color: '#1B4F8A', fontSize: '14px', fontWeight: '600' } },
-    xAxis: { categories: byService.map(s => s.name), title: { text: null } },
-    yAxis: { min: 0, title: { text: 'Cantidad' } },
-    plotOptions: { bar: { dataLabels: { enabled: true }, shadow: { color: 'rgba(27,79,138,0.15)', width: 6, offsetY: 3 } } },
-    series: [{ type: 'bar', name: 'Reservaciones', data: byService.map(s => s.y), color: '#2B6CB0' }],
+    xAxis: { categories: byService.map(s => s.name), title: { text: null },
+      labels: { style: { fontSize: '11px', color: '#64748B' } } },
+    yAxis: { min: 0, title: { text: null },
+      gridLineColor: '#EFF6FF' },
+    plotOptions: { bar: {
+      dataLabels: { enabled: true, style: { fontWeight: '600', color: '#1B4F8A' } },
+      borderRadius: 4,
+      shadow: { color: 'rgba(27,79,138,0.15)', width: 6, offsetY: 3 },
+    }},
+    tooltip: odooTooltip,
+    series: [{ type: 'bar', name: 'Reservaciones', data: byService.map(s => s.y),
+      color: { linearGradient: { x1:0, x2:1, y1:0, y2:0 }, stops: [[0,'#2B6CB0'],[1,'#63B3ED']] } as any }],
     credits: { enabled: false },
   }
 
+  // Columnas por sala con spline superpuesta
   const columnRoomOptions: Highcharts.Options = {
     chart: { type: 'column', style: { fontFamily: 'Inter, sans-serif' }, shadow: true, height: chartHeight },
     title: { text: 'Uso por Sala', style: { color: '#1B4F8A', fontSize: '14px', fontWeight: '600' } },
-    xAxis: { categories: byRoom.map(r => r.name) },
-    yAxis: { min: 0, title: { text: 'Reservaciones' } },
-    plotOptions: { column: { dataLabels: { enabled: true }, shadow: { color: 'rgba(27,79,138,0.15)', width: 6, offsetY: 3 } } },
-    series: [{ type: 'column', name: 'Uso', data: byRoom.map(r => r.y), color: '#1B4F8A' }],
+    xAxis: { categories: byRoom.map(r => r.name),
+      labels: { style: { fontSize: '11px', color: '#64748B' } } },
+    yAxis: { min: 0, title: { text: null }, gridLineColor: '#EFF6FF' },
+    plotOptions: { column: {
+      dataLabels: { enabled: true, style: { fontWeight: '600', color: '#1B4F8A' } },
+      borderRadius: 4,
+      shadow: { color: 'rgba(27,79,138,0.15)', width: 6, offsetY: 3 },
+    }},
+    tooltip: odooTooltip,
+    series: [{ type: 'column', name: 'Reservaciones', data: byRoom.map(r => r.y),
+      color: { linearGradient: { x1:0, x2:0, y1:0, y2:1 }, stops: [[0,'#1B4F8A'],[1,'#63B3ED']] } as any }],
     credits: { enabled: false },
   }
 
+  // Tendencia: spline suavizado con área rellena (areaspline)
   const trendOptions: Highcharts.Options = {
-    chart: { type: 'spline', style: { fontFamily: 'Inter, sans-serif' }, shadow: true, height: chartHeight },
+    chart: { type: 'areaspline', style: { fontFamily: 'Inter, sans-serif' }, shadow: true, height: chartHeight },
     title: { text: 'Tendencia Mensual', style: { color: '#1B4F8A', fontSize: '14px', fontWeight: '600' } },
-    xAxis: { categories: monthCategories },
-    yAxis: { title: { text: 'Reservaciones' } },
-    plotOptions: { spline: { shadow: { color: 'rgba(27,79,138,0.18)', width: 8, offsetY: 4 } } },
+    xAxis: { categories: monthCategories, labels: { style: { fontSize: '11px', color: '#64748B' } } },
+    yAxis: { title: { text: null }, gridLineColor: '#EFF6FF' },
+    plotOptions: { areaspline: {
+      fillOpacity: 0.12,
+      lineWidth: 2.5,
+      marker: { enabled: true, radius: 4, symbol: 'circle' },
+      shadow: { color: 'rgba(27,79,138,0.18)', width: 8, offsetY: 4 },
+    }},
+    tooltip: { ...odooTooltip, shared: true },
     series: monthly.map((s, i) => ({
-      type: 'spline' as const,
+      type: 'areaspline' as const,
       name: s.name,
       data: s.data,
       color: ['#10B981', '#EF4444', '#F59E0B'][i],

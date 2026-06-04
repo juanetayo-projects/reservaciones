@@ -73,6 +73,28 @@
   box-shadow: 0 4px 20px rgba(27,79,138,0.10), 0 1px 4px rgba(27,79,138,0.06);
 }
 
+/* ── Festivos y Domingos Colombia ── */
+.fc-day-sunday .fc-daygrid-day-frame,
+.fc-day-sunday {
+  background-color: #FEF2F2 !important;
+}
+.fc-day-sunday .fc-daygrid-day-number {
+  color: #EF4444 !important;
+  font-weight: 700;
+}
+.fc-day-holiday .fc-daygrid-day-frame,
+.fc-day-holiday {
+  background-color: #FFF7ED !important;
+}
+.fc-day-holiday .fc-daygrid-day-number {
+  color: #F97316 !important;
+  font-weight: 700;
+}
+.fc-day-sunday.fc-day-today .fc-daygrid-day-frame,
+.fc-day-holiday.fc-day-today .fc-daygrid-day-frame {
+  background-color: inherit !important;
+}
+
 /* FullCalendar custom styles */
 .fc .fc-toolbar-title {
   @apply text-lg font-semibold text-primary-800;

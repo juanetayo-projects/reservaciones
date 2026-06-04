@@ -4,7 +4,7 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import esLocale from '@fullcalendar/core/locales/es'
-import type { EventClickArg, DateSelectArg, EventHoveringArg } from '@fullcalendar/core'
+import type { EventClickArg, DateSelectArg, EventHoveringArg, DayCellContentArg } from '@fullcalendar/core'
 import { supabase } from '../lib/supabase'
 import ReservationForm from '../components/Reservations/ReservationForm'
 import ReservationCard from '../components/Reservations/ReservationCard'
@@ -16,6 +16,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { Filter, CalendarDays, Clock, MapPin, User } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { getColombianHolidays, isBlockedDay } from '../lib/colombianHolidays'
 
 const STATUS_LABELS: Record<string, string> = {
   pendiente: 'Pendiente', aceptada: 'Aceptada',
@@ -46,6 +47,13 @@ export default function CalendarPage() {
   const [selectedRes, setSelectedRes] = useState<ReservacionCompleta | null>(null)
   const [action, setAction] = useState<'accept' | 'reject' | 'cancel' | 'reschedule' | null>(null)
   const [tooltip, setTooltip] = useState<TooltipData | null>(null)
+
+  // Festivos Colombia — pre-calculados para el año actual y el siguiente
+  const currentYear = new Date().getFullYear()
+  const holidays = new Set([
+    ...getColombianHolidays(currentYear),
+    ...getColombianHolidays(currentYear + 1),
+  ])
 
   const loadEvents = useCallback(async () => {
     let q = supabase
@@ -128,8 +136,15 @@ export default function CalendarPage() {
 
   async function handleDateSelect(arg: DateSelectArg) {
     const today = new Date().toISOString().split('T')[0]
-    if (arg.startStr < today) return
-    setSelectedDate(arg.startStr)
+    const dateStr = arg.startStr.split('T')[0]
+    if (dateStr < today) return
+    if (isBlockedDay(dateStr, holidays)) {
+      const d = new Date(dateStr + 'T00:00:00')
+      const msg = d.getDay() === 0 ? 'No se pueden hacer reservaciones los domingos.' : 'Este día es festivo en Colombia y no se permiten reservaciones.'
+      toast.error(msg, { icon: '🚫' })
+      return
+    }
+    setSelectedDate(dateStr)
     setShowForm(true)
   }
 
@@ -212,6 +227,7 @@ export default function CalendarPage() {
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
           locale={esLocale}
+          timeZone="America/Bogota"
           headerToolbar={{ left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' }}
           events={events}
           selectable
@@ -223,6 +239,20 @@ export default function CalendarPage() {
           eventDisplay="block"
           eventTimeFormat={{ hour: '2-digit', minute: '2-digit', meridiem: false }}
           dayMaxEvents={3}
+          // Bloquear domingos y festivos colombianos
+          selectAllow={(selectInfo) => {
+            const dateStr = selectInfo.startStr.split('T')[0]
+            return !isBlockedDay(dateStr, holidays)
+          }}
+          // Colorear domingos y festivos
+          dayCellClassNames={(arg: DayCellContentArg) => {
+            const dateStr = arg.date.toISOString().split('T')[0]
+            const isSunday = arg.date.getDay() === 0
+            const isHoliday = holidays.has(dateStr)
+            if (isSunday) return ['fc-day-sunday']
+            if (isHoliday) return ['fc-day-holiday']
+            return []
+          }}
         />
       </div>
 

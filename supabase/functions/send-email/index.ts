@@ -3,8 +3,38 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? ''
 const FROM_EMAIL     = Deno.env.get('FROM_EMAIL') ?? 'Clínica Santa Bárbara <agenda@cacsantabarbara.co>'
 
+// ─── Google Calendar link generator ─────────────────────────────────────────
+function googleCalendarLink(d: any): string {
+  try {
+    const fecha = (d.fecha_evento ?? '').replace(/-/g, '')
+    const hi = (d.hora_inicio ?? '09:00').replace(':', '')
+    const hf = (d.hora_fin   ?? '10:00').replace(':', '')
+    const start = `${fecha}T${hi.padEnd(6,'0')}`
+    const end   = `${fecha}T${hf.padEnd(6,'0')}`
+    const title = encodeURIComponent(d.asunto ?? 'Reunión')
+    const loc   = encodeURIComponent(`${d.sala_nombre ?? ''} — ${d.sede_nombre ?? ''}`)
+    const desc  = encodeURIComponent(`Organizado por: ${d.solicitante_nombre ?? ''} (${d.solicitante_servicio ?? ''})`)
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&location=${loc}&details=${desc}`
+  } catch { return '' }
+}
+
+function calendarButtonsHtml(d: any): string {
+  const gcal = googleCalendarLink(d)
+  if (!gcal) return ''
+  return `
+  <div style="margin-top:24px;text-align:center">
+    <p style="font-size:12px;color:#6B7280;margin:0 0 12px">Agregue este evento a su calendario:</p>
+    <a href="${gcal}" target="_blank"
+       style="display:inline-block;background:#1B4F8A;color:#fff;font-weight:600;font-size:13px;
+              padding:12px 28px;border-radius:8px;text-decoration:none;letter-spacing:0.3px">
+      📅 Agregar a Google Calendar
+    </a>
+  </div>`
+}
+
 // ─── Shared layout wrapper ──────────────────────────────────────────────────
-function layout(headerBg: string, headerText: string, badgeHtml: string, bodyHtml: string, d: any): string {
+// showCalendarBtn: true para correos de invitados
+function layout(badgeHtml: string, bodyHtml: string, d: any, showCalendarBtn = false): string {
   const invitadosHtml = d.invitados_emails?.length
     ? `<tr style="background:#F9FAFB">
         <td style="padding:10px 16px;color:#1B4F8A;font-weight:600;vertical-align:top">Invitados</td>
@@ -26,14 +56,14 @@ function layout(headerBg: string, headerText: string, badgeHtml: string, bodyHtm
   <tr><td align="center">
     <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(27,79,138,0.14)">
 
-      <!-- HEADER -->
+      <!-- HEADER — siempre azul como el logo de la Clínica -->
       <tr>
-        <td style="background:${headerBg};padding:0">
+        <td style="background:linear-gradient(135deg,#0F3460 0%,#1B4F8A 60%,#2B6CB0 100%);padding:0">
           <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
-              <td style="padding:28px 32px 20px">
-                <p style="margin:0 0 4px;color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase">Clínica Santa Bárbara</p>
-                <h1 style="margin:0;color:#fff;font-size:22px;font-weight:700">Agenda de Salas de Reuniones</h1>
+              <td style="padding:28px 32px 16px">
+                <p style="margin:0 0 2px;color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:2px;text-transform:uppercase">Clínica Santa Bárbara</p>
+                <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700">Agenda de Salas de Reuniones</h1>
               </td>
             </tr>
             <tr>
@@ -88,6 +118,9 @@ function layout(headerBg: string, headerText: string, badgeHtml: string, bodyHtm
 
           <!-- DESCRIPCIÓN -->
           ${d.descripcion ? `<div style="margin-top:20px;padding:14px 18px;background:#F8FAFC;border-radius:8px;border:1px solid #E2E8F0;font-size:13px;color:#64748B"><strong style="color:#475569">Descripción:</strong> ${d.descripcion}</div>` : ''}
+
+          <!-- BOTÓN GOOGLE CALENDAR (solo para invitados) -->
+          ${showCalendarBtn ? calendarButtonsHtml(d) : ''}
         </td>
       </tr>
 
@@ -117,15 +150,14 @@ function layout(headerBg: string, headerText: string, badgeHtml: string, bodyHtm
 // ─── Templates ──────────────────────────────────────────────────────────────
 const templates: Record<string, (d: any) => { subject: string; html: string }> = {
 
+  // badge color helpers
   accepted: (d) => ({
     subject: `✅ [ACEPTADA] Reservación: ${d.asunto} — ${d.fecha_evento}`,
     html: layout(
-      'linear-gradient(135deg,#065F46 0%,#10B981 100%)',
-      'Reservación Aceptada',
-      `<div style="display:inline-block;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.6);border-radius:30px;padding:8px 20px">
-        <span style="color:#fff;font-size:18px;font-weight:700">✅ RESERVACIÓN ACEPTADA</span>
+      `<div style="display:inline-block;background:#10B981;border-radius:30px;padding:8px 20px">
+        <span style="color:#fff;font-size:17px;font-weight:700">✅ RESERVACIÓN ACEPTADA</span>
       </div>`,
-      `<p style="margin:0 0 8px;font-size:16px;color:#065F46;font-weight:600">¡Su reservación ha sido confirmada!</p>
+      `<p style="margin:0 0 8px;font-size:15px;color:#065F46;font-weight:600">¡Su reservación ha sido confirmada!</p>
        <p style="margin:0;font-size:14px;color:#374151">Le informamos que su solicitud fue <strong>aprobada</strong>. A continuación encuentre los detalles del evento.</p>`,
       d
     ),
@@ -134,12 +166,10 @@ const templates: Record<string, (d: any) => { subject: string; html: string }> =
   rejected: (d) => ({
     subject: `❌ [RECHAZADA] Reservación: ${d.asunto} — ${d.fecha_evento}`,
     html: layout(
-      'linear-gradient(135deg,#991B1B 0%,#EF4444 100%)',
-      'Reservación Rechazada',
-      `<div style="display:inline-block;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.6);border-radius:30px;padding:8px 20px">
-        <span style="color:#fff;font-size:18px;font-weight:700">❌ RESERVACIÓN RECHAZADA</span>
+      `<div style="display:inline-block;background:#EF4444;border-radius:30px;padding:8px 20px">
+        <span style="color:#fff;font-size:17px;font-weight:700">❌ RESERVACIÓN RECHAZADA</span>
       </div>`,
-      `<p style="margin:0 0 8px;font-size:16px;color:#991B1B;font-weight:600">Su reservación no fue aprobada.</p>
+      `<p style="margin:0 0 8px;font-size:15px;color:#991B1B;font-weight:600">Su reservación no fue aprobada.</p>
        <p style="margin:0;font-size:14px;color:#374151">Lamentamos informarle que su solicitud ha sido <strong>rechazada</strong>. Puede consultar el motivo en la sección de observaciones y realizar una nueva solicitud.</p>`,
       d
     ),
@@ -148,12 +178,10 @@ const templates: Record<string, (d: any) => { subject: string; html: string }> =
   rescheduled: (d) => ({
     subject: `🔄 [REPROGRAMADA] Reservación: ${d.asunto} — Nueva fecha: ${d.fecha_evento}`,
     html: layout(
-      'linear-gradient(135deg,#1E3A8A 0%,#3B82F6 100%)',
-      'Reservación Reprogramada',
-      `<div style="display:inline-block;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.6);border-radius:30px;padding:8px 20px">
-        <span style="color:#fff;font-size:18px;font-weight:700">🔄 RESERVACIÓN REPROGRAMADA</span>
+      `<div style="display:inline-block;background:#3B82F6;border-radius:30px;padding:8px 20px">
+        <span style="color:#fff;font-size:17px;font-weight:700">🔄 RESERVACIÓN REPROGRAMADA</span>
       </div>`,
-      `<p style="margin:0 0 8px;font-size:16px;color:#1E3A8A;font-weight:600">Su reservación ha sido reprogramada.</p>
+      `<p style="margin:0 0 8px;font-size:15px;color:#1E3A8A;font-weight:600">Su reservación ha sido reprogramada.</p>
        <p style="margin:0;font-size:14px;color:#374151">Le informamos que su reservación fue <strong>reprogramada</strong> para una nueva fecha y/o horario. A continuación encuentre los detalles actualizados.</p>`,
       d
     ),
@@ -162,72 +190,62 @@ const templates: Record<string, (d: any) => { subject: string; html: string }> =
   cancelled: (d) => ({
     subject: `🚫 [CANCELADA] Reservación: ${d.asunto} — ${d.fecha_evento}`,
     html: layout(
-      'linear-gradient(135deg,#374151 0%,#6B7280 100%)',
-      'Reservación Cancelada',
-      `<div style="display:inline-block;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.6);border-radius:30px;padding:8px 20px">
-        <span style="color:#fff;font-size:18px;font-weight:700">🚫 RESERVACIÓN CANCELADA</span>
+      `<div style="display:inline-block;background:#6B7280;border-radius:30px;padding:8px 20px">
+        <span style="color:#fff;font-size:17px;font-weight:700">🚫 RESERVACIÓN CANCELADA</span>
       </div>`,
-      `<p style="margin:0 0 8px;font-size:16px;color:#374151;font-weight:600">La reservación ha sido cancelada.</p>
+      `<p style="margin:0 0 8px;font-size:15px;color:#374151;font-weight:600">La reservación ha sido cancelada.</p>
        <p style="margin:0;font-size:14px;color:#374151">Le informamos que la siguiente reservación ha sido <strong>cancelada</strong>. Consulte la observación para más detalles.</p>`,
       d
     ),
   }),
 
-  // ── Plantillas para INVITADOS (mensaje diferente al del solicitante) ──────
+  // ── Plantillas para INVITADOS ─────────────────────────────────────────────
 
   invited: (d) => ({
     subject: `📅 [CONVOCATORIA] Ha sido invitado(a): ${d.asunto} — ${d.fecha_evento}`,
     html: layout(
-      'linear-gradient(135deg,#065F46 0%,#10B981 100%)',
-      'Convocatoria a Reunión',
-      `<div style="display:inline-block;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.6);border-radius:30px;padding:8px 20px">
-        <span style="color:#fff;font-size:18px;font-weight:700">📅 HA SIDO CONVOCADO(A)</span>
+      `<div style="display:inline-block;background:#10B981;border-radius:30px;padding:8px 20px">
+        <span style="color:#fff;font-size:17px;font-weight:700">📅 HA SIDO CONVOCADO(A)</span>
       </div>`,
-      `<p style="margin:0 0 8px;font-size:16px;color:#065F46;font-weight:600">Ha sido convocado(a) a una reunión.</p>
+      `<p style="margin:0 0 8px;font-size:15px;color:#065F46;font-weight:600">Ha sido convocado(a) a una reunión.</p>
        <p style="margin:0;font-size:14px;color:#374151">
          <strong>${d.solicitante_nombre ?? 'Un colaborador'}</strong>
          ${d.solicitante_servicio ? `— ${d.solicitante_servicio}` : ''}
-         le ha convocado a asistir al siguiente evento. Por favor, tenga en cuenta la fecha y el horario indicados.
+         le ha convocado a asistir al siguiente evento. Por favor tenga en cuenta la fecha y el horario.
        </p>`,
-      d
+      d, true  // ← showCalendarBtn
     ),
   }),
 
   invited_rescheduled: (d) => ({
     subject: `🔄 [CAMBIO DE FECHA] Reunión reprogramada: ${d.asunto} — Nueva fecha: ${d.fecha_evento}`,
     html: layout(
-      'linear-gradient(135deg,#1E3A8A 0%,#3B82F6 100%)',
-      'Reunión Reprogramada',
-      `<div style="display:inline-block;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.6);border-radius:30px;padding:8px 20px">
-        <span style="color:#fff;font-size:18px;font-weight:700">🔄 CAMBIO DE FECHA Y/O HORARIO</span>
+      `<div style="display:inline-block;background:#3B82F6;border-radius:30px;padding:8px 20px">
+        <span style="color:#fff;font-size:17px;font-weight:700">🔄 CAMBIO DE FECHA Y/O HORARIO</span>
       </div>`,
-      `<p style="margin:0 0 8px;font-size:16px;color:#1E3A8A;font-weight:600">La reunión a la que fue convocado(a) ha sido reprogramada.</p>
+      `<p style="margin:0 0 8px;font-size:15px;color:#1E3A8A;font-weight:600">La reunión a la que fue convocado(a) ha sido reprogramada.</p>
        <p style="margin:0;font-size:14px;color:#374151">
-         Le informamos que la reunión organizada por
-         <strong>${d.solicitante_nombre ?? 'su colega'}</strong>
-         ha sido reprogramada para una nueva fecha y/o horario.
-         Tenga en cuenta los detalles actualizados a continuación.
+         Le informamos que la reunión organizada por <strong>${d.solicitante_nombre ?? 'su colega'}</strong>
+         ha sido reprogramada. Tenga en cuenta los detalles actualizados a continuación.
        </p>`,
-      d
+      d, true
     ),
   }),
 
   invited_cancelled: (d) => ({
     subject: `🚫 [CANCELACIÓN] Reunión cancelada: ${d.asunto} — ${d.fecha_evento}`,
     html: layout(
-      'linear-gradient(135deg,#374151 0%,#6B7280 100%)',
-      'Reunión Cancelada',
-      `<div style="display:inline-block;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.6);border-radius:30px;padding:8px 20px">
-        <span style="color:#fff;font-size:18px;font-weight:700">🚫 REUNIÓN CANCELADA</span>
+      `<div style="display:inline-block;background:#6B7280;border-radius:30px;padding:8px 20px">
+        <span style="color:#fff;font-size:17px;font-weight:700">🚫 REUNIÓN CANCELADA</span>
       </div>`,
-      `<p style="margin:0 0 8px;font-size:16px;color:#374151;font-weight:600">La reunión a la que fue convocado(a) ha sido cancelada.</p>
+      `<p style="margin:0 0 8px;font-size:15px;color:#374151;font-weight:600">La reunión a la que fue convocado(a) ha sido cancelada.</p>
        <p style="margin:0;font-size:14px;color:#374151">
          Le informamos que la reunión organizada por
          <strong>${d.solicitante_nombre ?? 'su colega'}</strong>
          a la que usted fue convocado(a), ha sido <strong>cancelada</strong>.
          Consulte la observación para conocer el motivo.
        </p>`,
-      d
+      d, false
     ),
   }),
 }
