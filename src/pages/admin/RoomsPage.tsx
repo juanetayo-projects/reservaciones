@@ -6,12 +6,18 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
 
+const PRESET_COLORS = [
+  '#1B4F8A','#10B981','#8B5CF6','#F59E0B','#EF4444',
+  '#06B6D4','#EC4899','#84CC16','#F97316','#6366F1',
+]
+
 const salaSchema = z.object({
   sede_id: z.coerce.number().min(1, 'Seleccione sede'),
   nombre: z.string().min(2, 'Requerido'),
   ubicacion: z.string().optional(),
   descripcion: z.string().optional(),
   capacidad: z.coerce.number().min(1).default(10),
+  color: z.string().default('#1B4F8A'),
   activa: z.boolean().default(true),
 })
 const sedeSchema = z.object({
@@ -44,10 +50,10 @@ export default function RoomsPage() {
     setSedes(sd ?? [])
   }
 
-  function openNewSala() { setEditingSala(null); salaForm.reset({ capacidad: 10, activa: true }); setShowSalaForm(true) }
+  function openNewSala() { setEditingSala(null); salaForm.reset({ capacidad: 10, color: '#1B4F8A', activa: true }); setShowSalaForm(true) }
   function openEditSala(s: any) {
     setEditingSala(s)
-    salaForm.reset({ sede_id: s.sede_id, nombre: s.nombre, ubicacion: s.ubicacion ?? '', descripcion: s.descripcion ?? '', capacidad: s.capacidad, activa: s.activa })
+    salaForm.reset({ sede_id: s.sede_id, nombre: s.nombre, ubicacion: s.ubicacion ?? '', descripcion: s.descripcion ?? '', capacidad: s.capacidad, color: s.color ?? '#1B4F8A', activa: s.activa })
     setShowSalaForm(true)
   }
 
@@ -103,20 +109,24 @@ export default function RoomsPage() {
       </div>
 
       {tab === 'salas' && (
-        <div className="card overflow-hidden p-0">
-          <table className="w-full text-sm">
-            <thead className="bg-primary-50 text-primary-700">
-              <tr>{['Nombre','Sede','Ubicación','Capacidad','Estado',''].map(h => <th key={h} className="text-left px-4 py-3 font-semibold">{h}</th>)}</tr>
+        <div className="table-wrapper">
+          <table className="data-table">
+            <thead>
+              <tr>{['Color','Nombre','Sede','Ubicación','Capacidad','Estado',''].map(h => <th key={h}>{h}</th>)}</tr>
             </thead>
             <tbody>
               {salas.map(s => (
-                <tr key={s.id} className="border-t border-gray-50 hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-700">{s.nombre}</td>
-                  <td className="px-4 py-3 text-gray-600">{s.sede?.nombre}</td>
-                  <td className="px-4 py-3 text-gray-600">{s.ubicacion ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-600">{s.capacidad} sillas</td>
-                  <td className="px-4 py-3"><span className={`badge ${s.activa ? 'badge-accepted' : 'badge-cancelled'}`}>{s.activa ? 'Activa' : 'Inactiva'}</span></td>
-                  <td className="px-4 py-3 flex gap-2">
+                <tr key={s.id}>
+                  <td>
+                    <span className="inline-block w-5 h-5 rounded-full border border-white shadow"
+                      style={{ backgroundColor: s.color ?? '#1B4F8A' }} />
+                  </td>
+                  <td className="font-medium text-gray-700">{s.nombre}</td>
+                  <td className="text-gray-600">{s.sede?.nombre}</td>
+                  <td className="text-gray-600">{s.ubicacion ?? '—'}</td>
+                  <td className="text-gray-600">{s.capacidad} sillas</td>
+                  <td><span className={`badge ${s.activa ? 'badge-accepted' : 'badge-cancelled'}`}>{s.activa ? 'Activa' : 'Inactiva'}</span></td>
+                  <td className="flex gap-2">
                     <button onClick={() => openEditSala(s)} className="text-primary-600 hover:text-primary-800"><Pencil size={15} /></button>
                     <button onClick={() => deleteSala(s.id)} className="text-red-400 hover:text-red-600"><Trash2 size={15} /></button>
                   </td>
@@ -178,6 +188,18 @@ export default function RoomsPage() {
                 <div className="col-span-2">
                   <label className="form-label">Descripción</label>
                   <textarea {...salaForm.register('descripcion')} rows={2} className="form-input" />
+                </div>
+                <div className="col-span-2">
+                  <label className="form-label">Color identificador</label>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {PRESET_COLORS.map(c => (
+                      <button key={c} type="button"
+                        onClick={() => salaForm.setValue('color', c)}
+                        className={`w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 ${salaForm.watch('color') === c ? 'border-gray-800 scale-110' : 'border-transparent'}`}
+                        style={{ backgroundColor: c }} />
+                    ))}
+                    <input {...salaForm.register('color')} type="color" className="w-7 h-7 rounded cursor-pointer border border-gray-300" title="Color personalizado" />
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <input {...salaForm.register('activa')} type="checkbox" id="activa" className="w-4 h-4 rounded" />
